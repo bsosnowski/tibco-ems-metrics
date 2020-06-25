@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  ems:
+    image: tibco/ems-ce:8.5.1
+    container_name: tibco_ems
+    ports:
+      - 7222:7222
+
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    container_name: graphite
+    ports:
+      - 8080:80
+      - 2003-2004:2003-2004
+      - 2023-2024:2023-2024
+      - 8125:8125/udp
+      - 8126:8126
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - 3000:3000
+    links:
+      - graphite
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
+  metrics:
+    image: ems-metrics:latest
+    container_name: ems-metrics
+    links:
+      - graphite
+      - ems
+    volumes:
+      - ./metrics/metrics.properties:/metrics.properties
